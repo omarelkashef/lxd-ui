@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   MainTable,
   Notification,
@@ -9,34 +9,94 @@ import {
   useNotify,
   Spinner,
   CustomLayout,
+  useToastNotification,
 } from "@canonical/react-components";
-import SettingForm from "./SettingForm";
 import NotificationRow from "components/NotificationRow";
 import HelpLink from "components/HelpLink";
 import { queryKeys } from "util/queryKeys";
-import { fetchConfigOptions } from "api/server";
+import { fetchConfigOptions, updateSettings } from "api/server";
 import { useQuery } from "@tanstack/react-query";
-import type { ConfigField } from "types/config";
-import ConfigFieldDescription from "pages/settings/ConfigFieldDescription";
 import { toConfigFields } from "util/config";
 import PageHeader from "components/PageHeader";
 import { useSupportedFeatures } from "context/useSupportedFeatures";
 import { useServerEntitlements } from "util/entitlements/server";
-import type { ClusterSpecificValues } from "components/ClusterSpecificSelect";
 import { useClusteredSettings } from "context/useSettings";
-import type { LXDSettingOnClusterMember } from "types/server";
 import { useProjects } from "context/useProjects";
-import { getDefaultProject } from "util/loginProject";
+import {
+  type UserConfigField,
+  getConfigFieldClusteredValue,
+  getConfigFieldRow,
+  getConfigFieldValue,
+  getUserConfigs,
+  getUserConfigFieldInputRow,
+  getAddConfigButton,
+} from "util/settings";
+import ResourceLabel from "components/ResourceLabel";
+import type { MainTableRow } from "@canonical/react-components/dist/components/MainTable/MainTable";
 
 const Settings: FC = () => {
   const [query, setQuery] = useState("");
+
+  const [userConfigs, setUserConfigs] = useState<UserConfigField[]>([]);
+
   const notify = useNotify();
+  const toastNotify = useToastNotification();
+
   const {
     hasMetadataConfiguration,
     settings,
     isSettingsLoading,
     settingsError,
   } = useSupportedFeatures();
+
+  const { data: projects = [] } = useProjects();
+
+  useEffect(() => {
+    if (userConfigs.length === 0) {
+      setUserConfigs(getUserConfigs(settings?.config ?? {}, projects));
+    }
+  }, [settings, projects]);
+
+  const addUserSetting = (index: number) => {
+    const key = userConfigs[index].key;
+    const value = userConfigs[index].value;
+
+    const settingLabel = (
+      <ResourceLabel bold type="setting" value={`user.${key}`} />
+    );
+    updateSettings({ [`user.${key}`]: value })
+      .then(() => {
+        setUserConfigs((prev) => {
+          const copy = [...prev];
+          copy[index].isSaved = true;
+          copy[index].key = `user.${copy[index].key}`;
+          return copy;
+        });
+        toastNotify.success(<>Setting {settingLabel} added</>);
+      })
+      .catch((e) => {
+        notify.failure(`Setting add failed`, e, settingLabel);
+      });
+  };
+
+  const deleteUserSetting = (userKey: string) => {
+    const index = userConfigs.findIndex((c) => c.key === userKey);
+
+    const settingLabel = <ResourceLabel bold type="setting" value={userKey} />;
+    updateSettings({ [userKey]: "" })
+      .then(() => {
+        setUserConfigs((prev) => {
+          const copy = [...prev];
+          copy.splice(index, 1);
+          return copy;
+        });
+        toastNotify.success(<>Setting {settingLabel} deleted</>);
+      })
+      .catch((e) => {
+        notify.failure(`Setting delete failed`, e, settingLabel);
+      });
+  };
+
   const { canEditServerConfiguration } = useServerEntitlements();
 
   const { data: configOptions, isLoading: isConfigOptionsLoading } = useQuery({
@@ -45,8 +105,6 @@ const Settings: FC = () => {
   });
   const { data: clusteredSettings = [], error: clusterError } =
     useClusteredSettings();
-
-  const { data: projects = [] } = useProjects();
 
   if (clusterError) {
     notify.failure("Loading clustered settings failed", clusterError);
@@ -60,35 +118,6 @@ const Settings: FC = () => {
     notify.failure("Loading settings failed", settingsError);
   }
 
-  const getValue = (configField: ConfigField): string | undefined => {
-    for (const [key, value] of Object.entries(settings?.config ?? {})) {
-      if (key === configField.key) {
-        return value;
-      }
-    }
-    if (configField.type === "bool") {
-      return configField.default === "true" ? "true" : "false";
-    }
-    if (configField.default === "-") {
-      return undefined;
-    }
-    return configField.default;
-  };
-
-  const getClusteredValue = (
-    clusteredSettings: LXDSettingOnClusterMember[],
-    configField: ConfigField,
-  ): ClusterSpecificValues => {
-    const settingPerClusterMember: ClusterSpecificValues = {};
-
-    clusteredSettings?.forEach((item) => {
-      settingPerClusterMember[item.memberName] =
-        item.config?.[configField.key] ?? configField.default ?? "";
-    });
-
-    return settingPerClusterMember;
-  };
-
   const headers = [
     { content: "Group", className: "group" },
     { content: "Key", className: "key" },
@@ -97,44 +126,8 @@ const Settings: FC = () => {
 
   const configFields = toConfigFields(configOptions?.configs?.server ?? {});
 
-  configFields.push({
-    key: "user.ui_grafana_base_url",
-    category: "user",
-    default: "",
-    longdesc:
-      "e.g. https://example.org/dashboard?project={project}&name={instance}\n or https://192.0.2.1:3000/d/bGY-LSB7k/lxd?orgId=1",
-    shortdesc:
-      "LXD will replace `{instance}` and `{project}` with project and instance names for deep-linking to individual grafana pages.\nSee {ref}`grafana` for more information.",
-    type: "string",
-  });
-
-  configFields.push({
-    key: "user.ui_login_project",
-    category: "user",
-    default: getDefaultProject(projects),
-    shortdesc: "Project to display on login.",
-    type: "string",
-  });
-
-  configFields.push({
-    key: "user.ui_theme",
-    category: "user",
-    default: "",
-    shortdesc:
-      "Set UI to dark theme, light theme, or to match the system theme.",
-    type: "string",
-  });
-
-  configFields.push({
-    key: "user.ui_title",
-    category: "user",
-    default: "",
-    shortdesc: "Title for the LXD-UI web page. Shows the hostname when unset.",
-    type: "string",
-  });
-
   let lastCategory = "";
-  const rows = configFields
+  const rows: MainTableRow[] = configFields
     .filter((configField) => {
       if (!query) {
         return true;
@@ -145,60 +138,51 @@ const Settings: FC = () => {
       );
     })
     .map((configField, index, { length }) => {
-      const isDefault = !Object.keys(settings?.config ?? {}).some(
-        (key) => key === configField.key,
+      const value = getConfigFieldValue(configField, settings);
+      const clusteredValue = getConfigFieldClusteredValue(
+        clusteredSettings,
+        configField,
       );
-      const value = getValue(configField);
-
-      const clusteredValue = getClusteredValue(clusteredSettings, configField);
-
       const isNewCategory = lastCategory !== configField.category;
       lastCategory = configField.category;
-
-      return {
-        key: configField.key,
-        columns: [
-          {
-            content: isNewCategory && (
-              <h2 className="p-heading--5">{configField.category}</h2>
-            ),
-            role: "rowheader",
-            className: "group",
-            "aria-label": "Group",
-          },
-          {
-            content: (
-              <div className="key-cell">
-                {isDefault ? (
-                  configField.key
-                ) : (
-                  <strong>{configField.key}</strong>
-                )}
-                <p className="p-text--small u-text--muted u-no-margin--bottom">
-                  <ConfigFieldDescription description={configField.shortdesc} />
-                </p>
-              </div>
-            ),
-            role: "cell",
-            className: "key",
-            "aria-label": "Key",
-          },
-          {
-            content: (
-              <SettingForm
-                configField={configField}
-                value={value}
-                clusteredValue={clusteredValue}
-                isLast={index === length - 1}
-              />
-            ),
-            role: "cell",
-            "aria-label": "Value",
-            className: "u-vertical-align-middle",
-          },
-        ],
-      };
+      const isLast = index === length - 1;
+      return getConfigFieldRow(
+        configField,
+        isLast,
+        isNewCategory,
+        clusteredValue,
+        deleteUserSetting,
+        settings,
+        value,
+      );
     });
+
+  userConfigs.forEach((field, index) => {
+    const isLast = index === length - 1;
+    const isNewCategory = index === 0;
+
+    const row = field.isSaved
+      ? getConfigFieldRow(
+          field,
+          isLast,
+          isNewCategory,
+          {},
+          deleteUserSetting,
+          settings,
+          getConfigFieldValue(field, settings),
+        )
+      : getUserConfigFieldInputRow(
+          field,
+          userConfigs,
+          index,
+          setUserConfigs,
+          addUserSetting,
+        );
+
+    rows.push(row);
+  });
+
+  rows.push(getAddConfigButton(setUserConfigs));
 
   return (
     <>

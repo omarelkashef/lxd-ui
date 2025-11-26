@@ -22,12 +22,9 @@ import ClusteredSettingFormInput from "./ClusteredSettingFormInput";
 import type { ClusterSpecificValues } from "components/ClusterSpecificSelect";
 import { useIsClustered } from "context/useIsClustered";
 
-export const getConfigId = (key: string) => {
-  return key.replace(".", "___");
-};
-
 interface Props {
   configField: ConfigField;
+  onDelete: (key: string) => void;
   value?: string;
   clusteredValue?: ClusterSpecificValues;
   isLast?: boolean;
@@ -35,6 +32,7 @@ interface Props {
 
 const SettingForm: FC<Props> = ({
   configField,
+  onDelete,
   value,
   clusteredValue,
   isLast,
@@ -172,6 +170,10 @@ const SettingForm: FC<Props> = ({
                   initialValue={value ?? ""}
                   configField={configField}
                   onSubmit={onSubmit}
+                  onDelete={(key: string) => {
+                    onDelete(key);
+                    setEditMode(false);
+                  }}
                   onCancel={onCancel}
                 />
               )}
