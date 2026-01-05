@@ -1,9 +1,9 @@
 import { type FC } from "react";
-import { Input } from "@canonical/react-components";
 import { type LxdNetwork } from "types/network";
 import { typesWithNicStaticIPSupport } from "util/networks";
 import type { NetworkDeviceFormValues } from "components/forms/NetworkDevicesForm/edit/NetworkDevicePanel";
 import type { FormikProps } from "formik";
+import PrefixedIpInput from "components/PrefixedIpInput";
 
 interface Props {
   formik: FormikProps<NetworkDeviceFormValues>;
@@ -24,27 +24,21 @@ const NetworkDeviceIPAddressEdit: FC<Props> = ({ formik, network, family }) => {
     network?.managed &&
     typesWithNicStaticIPSupport.includes(network.type) &&
     ipAddressConfigValue !== "none";
-
   return (
-    <Input
+    <PrefixedIpInput
       id={formikFieldName}
       name={formikFieldName}
-      type="text"
+      cidr={ipAddressConfigValue || ""}
+      ip={formik.values[formikFieldName] || ""}
       label={`${family} address reservation`}
-      placeholder={`Enter ${family} address`}
-      value={formik.values[formikFieldName] || ""}
-      onChange={(e) => {
-        void formik.setFieldValue(formikFieldName, e.target.value);
+      onIpChange={(ip: string) => {
+        formik.setFieldValue(formikFieldName, ip);
       }}
       onBlur={() => {
         void formik.setFieldTouched(formikFieldName, true);
       }}
       disabled={!isEnabled}
-      help={
-        isEnabled
-          ? `Choose an ${family} address within the subnet range ${ipAddressConfigValue || ""}, or leave empty for dynamic assignment`
-          : `Static ${family} is not available for this network`
-      }
+      help={!isEnabled && `Static ${family} is not available for this network`}
     />
   );
 };
