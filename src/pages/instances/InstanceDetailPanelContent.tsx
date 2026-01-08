@@ -14,6 +14,7 @@ import InstanceMACAddresses from "pages/instances/InstaceMACAddresses";
 import ResourceLink from "components/ResourceLink";
 import InstanceClusterMemberChip from "./InstanceClusterMemberChip";
 import { getImageLink, getInstanceType } from "util/instances";
+import NetworkRichChip from "pages/networks/NetworkRichChip";
 
 const RECENT_SNAPSHOT_LIMIT = 5;
 
@@ -154,11 +155,10 @@ const InstanceDetailPanelContent: FC<Props> = ({ instance }) => {
               <List
                 className="list"
                 items={networkDevices.map((item) => (
-                  <ResourceLink
+                  <NetworkRichChip
                     key={item.network}
-                    type="network"
-                    value={item.network}
-                    to={`/ui/project/${encodeURIComponent(instance.project)}/network/${encodeURIComponent(item.network)}`}
+                    networkName={item.network}
+                    projectName={instance.project}
                   />
                 ))}
               />
