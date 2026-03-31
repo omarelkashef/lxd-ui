@@ -37,6 +37,7 @@ import {
   isStoragePoolWithSize,
   isStoragePoolWithSource,
 } from "util/storagePoolForm";
+import OutputField from "components/OutputField";
 
 interface Props {
   formik: FormikProps<StoragePoolFormValues>;
@@ -58,6 +59,7 @@ const StoragePoolFormMain: FC<Props> = ({ formik }) => {
     };
   };
 
+  const isCreating = formik.values.isCreating;
   const isCephObjectDriver = formik.values.driver === cephObject;
   const isPowerFlexDriver = formik.values.driver === powerFlex;
   const isPureDriver = formik.values.driver === pureStorage;
@@ -75,13 +77,6 @@ const StoragePoolFormMain: FC<Props> = ({ formik }) => {
     !isAlletraDriver &&
     !isCephVariantWithoutSource;
 
-  const sourceHelpText = formik.values.isCreating
-    ? getSourceHelpForDriver(formik.values.driver)
-    : "Source can't be changed";
-  const nameHelpText = !formik.values.isCreating
-    ? "Cannot rename storage pools"
-    : undefined;
-
   const cephObjectNotice = (
     <>
       Rados gateway must be enabled for Ceph Object driver to work. If using
@@ -90,18 +85,66 @@ const StoragePoolFormMain: FC<Props> = ({ formik }) => {
     </>
   );
 
+  const getSourceComponent = () => {
+    if (!hasSource) {
+      return null;
+    }
+    if (isClusteredServer(settings)) {
+      return (
+        <ClusteredSourceSelector
+          formik={formik}
+          helpText={
+            isCreating
+              ? getSourceHelpForDriver(formik.values.driver)
+              : "Source can't be changed"
+          }
+          disabledReason={formik.values.editRestriction}
+          canToggleMemberSpecific={!isClusterWideSource}
+        />
+      );
+    }
+    if (isCreating) {
+      return (
+        <Input
+          {...getFormProps("source")}
+          type="text"
+          disabled={!!formik.values.editRestriction}
+          help={getSourceHelpForDriver(formik.values.driver)}
+          label="Source"
+          title={formik.values.editRestriction}
+        />
+      );
+    }
+
+    return (
+      <OutputField
+        id="source"
+        label="Source"
+        value={formik.values.source}
+        help="Source can't be changed"
+      />
+    );
+  };
+
   return (
     <ScrollableForm>
       <Row>
         <Col size={12}>
-          <Input
-            {...getFormProps("name")}
-            type="text"
-            label="Name"
-            required
-            disabled={!formik.values.isCreating}
-            help={nameHelpText}
-          />
+          {isCreating ? (
+            <Input
+              {...getFormProps("name")}
+              type="text"
+              label="Name"
+              required
+            />
+          ) : (
+            <OutputField
+              id="name"
+              label="Name"
+              value={formik.values.name}
+              help="Cannot rename storage pools"
+            />
+          )}
           <AutoExpandingTextArea
             {...getFormProps("description")}
             label="Description"
@@ -112,73 +155,80 @@ const StoragePoolFormMain: FC<Props> = ({ formik }) => {
             disabled={!!formik.values.editRestriction}
             title={formik.values.editRestriction}
           />
-          <Select
-            id="driver"
-            name="driver"
-            help={
-              !formik.values.isCreating
-                ? "Driver can't be changed"
-                : formik.values.driver === zfsDriver
+          {!isCreating ? (
+            <OutputField
+              id="driver"
+              label="Driver"
+              value={formik.values.driver}
+              help="Driver can't be changed"
+            />
+          ) : (
+            <Select
+              id="driver"
+              name="driver"
+              help={
+                formik.values.driver === zfsDriver
                   ? "ZFS gives best performance and reliability"
                   : formik.values.driver === cephObject
                     ? cephObjectNotice
                     : undefined
-            }
-            label="Driver"
-            options={storageDriverOptions}
-            onChange={(target) => {
-              const val = target.target.value;
-              if (val !== cephDriver) {
-                const cephFields = getCephPoolFormFields();
-                for (const field of cephFields) {
-                  formik.setFieldValue(field, undefined);
+              }
+              label="Driver"
+              options={storageDriverOptions}
+              onChange={(target) => {
+                const val = target.target.value;
+                if (val !== cephDriver) {
+                  const cephFields = getCephPoolFormFields();
+                  for (const field of cephFields) {
+                    formik.setFieldValue(field, undefined);
+                  }
                 }
-              }
-              if (val !== cephObject) {
-                const cephobjectFields = getCephObjectPoolFormFields();
-                for (const field of cephobjectFields) {
-                  formik.setFieldValue(field, undefined);
+                if (val !== cephObject) {
+                  const cephobjectFields = getCephObjectPoolFormFields();
+                  for (const field of cephobjectFields) {
+                    formik.setFieldValue(field, undefined);
+                  }
                 }
-              }
-              if (val !== powerFlex) {
-                const powerflexFields = getPowerflexPoolFormFields();
-                for (const field of powerflexFields) {
-                  formik.setFieldValue(field, undefined);
+                if (val !== powerFlex) {
+                  const powerflexFields = getPowerflexPoolFormFields();
+                  for (const field of powerflexFields) {
+                    formik.setFieldValue(field, undefined);
+                  }
                 }
-              }
-              if (val !== pureStorage) {
-                const pureFields = getPureStoragePoolFormFields();
-                for (const field of pureFields) {
-                  formik.setFieldValue(field, undefined);
+                if (val !== pureStorage) {
+                  const pureFields = getPureStoragePoolFormFields();
+                  for (const field of pureFields) {
+                    formik.setFieldValue(field, undefined);
+                  }
                 }
-              }
-              if (val !== zfsDriver) {
-                const zfsFields = getZfsStoragePoolFormFields();
-                for (const field of zfsFields) {
-                  formik.setFieldValue(field, undefined);
+                if (val !== zfsDriver) {
+                  const zfsFields = getZfsStoragePoolFormFields();
+                  for (const field of zfsFields) {
+                    formik.setFieldValue(field, undefined);
+                  }
+                  formik.setFieldValue("zfsPoolNamePerClusterMember", "");
                 }
-                formik.setFieldValue("zfsPoolNamePerClusterMember", "");
-              }
-              if (val !== alletraDriver) {
-                const alletraFields = getAlletraStoragePoolFormFields();
-                for (const field of alletraFields) {
-                  formik.setFieldValue(field, undefined);
+                if (val !== alletraDriver) {
+                  const alletraFields = getAlletraStoragePoolFormFields();
+                  for (const field of alletraFields) {
+                    formik.setFieldValue(field, undefined);
+                  }
                 }
-              }
-              if (!isStoragePoolWithSize(val)) {
-                formik.setFieldValue("size", undefined);
-                formik.setFieldValue("sizePerClusterMember", undefined);
-              }
-              if (!isStoragePoolWithSource(val)) {
-                formik.setFieldValue("source", undefined);
-                formik.setFieldValue("sourcePerClusterMember", undefined);
-              }
-              formik.setFieldValue("driver", val);
-            }}
-            value={formik.values.driver}
-            required
-            disabled={!formik.values.isCreating}
-          />
+                if (!isStoragePoolWithSize(val)) {
+                  formik.setFieldValue("size", undefined);
+                  formik.setFieldValue("sizePerClusterMember", undefined);
+                }
+                if (!isStoragePoolWithSource(val)) {
+                  formik.setFieldValue("source", undefined);
+                  formik.setFieldValue("sourcePerClusterMember", undefined);
+                }
+                formik.setFieldValue("driver", val);
+              }}
+              value={formik.values.driver}
+              required
+            />
+          )}
+
           {isStoragePoolWithSize(formik.values.driver) &&
             (isClusteredServer(settings) ? (
               <ClusteredDiskSizeSelector
@@ -213,26 +263,7 @@ const StoragePoolFormMain: FC<Props> = ({ formik }) => {
                 disabledReason={formik.values.editRestriction}
               />
             ))}
-          {hasSource &&
-            (isClusteredServer(settings) ? (
-              <ClusteredSourceSelector
-                formik={formik}
-                helpText={sourceHelpText}
-                disabledReason={formik.values.editRestriction}
-                canToggleMemberSpecific={!isClusterWideSource}
-              />
-            ) : (
-              <Input
-                {...getFormProps("source")}
-                type="text"
-                disabled={
-                  !!formik.values.editRestriction || !formik.values.isCreating
-                }
-                help={sourceHelpText}
-                label="Source"
-                title={formik.values.editRestriction}
-              />
-            ))}
+          {getSourceComponent()}
           {isCephObjectDriver && (
             <>
               <Input

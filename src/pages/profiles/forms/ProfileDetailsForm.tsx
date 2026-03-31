@@ -12,6 +12,7 @@ import SshKeyForm from "components/forms/SshKeyForm";
 import { useIsClustered } from "context/useIsClustered";
 import PlacementGroupSelect from "pages/instances/forms/PlacementGroupSelect";
 import { getInstanceField } from "util/instanceConfigFields";
+import OutputField from "components/OutputField";
 
 export const profileDetailPayload = (values: ProfileDetailsFormValues) => {
   return {
@@ -37,29 +38,36 @@ interface Props {
 const ProfileDetailsForm: FC<Props> = ({ formik, isEdit, project }) => {
   const isDefaultProfile = formik.values.name === "default";
   const isClustered = useIsClustered();
+  const helpText = !isDefaultProfile
+    ? "Click the name in the header to rename the profile."
+    : "";
 
   return (
     <ScrollableForm>
       <Row>
         <Col size={12}>
-          <Input
-            id="name"
-            name="name"
-            type="text"
-            label="Profile name"
-            placeholder="Enter name"
-            help={
-              isEdit &&
-              !isDefaultProfile &&
-              "Click the name in the header to rename the profile"
-            }
-            onBlur={formik.handleBlur}
-            onChange={formik.handleChange}
-            value={formik.values.name}
-            error={formik.touched.name ? formik.errors.name : null}
-            required
-            disabled={isEdit}
-          />
+          {isEdit ? (
+            <OutputField
+              id="name"
+              label="Profile name"
+              value={formik.values.name}
+              help={helpText}
+            />
+          ) : (
+            <Input
+              id="name"
+              name="name"
+              type="text"
+              label="Profile name"
+              placeholder="Enter name"
+              help={helpText}
+              onBlur={formik.handleBlur}
+              onChange={formik.handleChange}
+              value={formik.values.name}
+              error={formik.touched.name ? formik.errors.name : null}
+              required
+            />
+          )}
           <AutoExpandingTextArea
             id="description"
             name="description"

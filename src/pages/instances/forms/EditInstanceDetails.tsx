@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import { Col, Row, Select } from "@canonical/react-components";
+import { Col, Row } from "@canonical/react-components";
 import ProfileSelector from "pages/profiles/ProfileSelector";
 import type { FormikProps } from "formik/dist/types";
 import type { EditInstanceFormValues } from "types/forms/instanceAndProfile";
@@ -64,18 +64,10 @@ const EditInstanceDetails: FC<Props> = ({ formik, project }) => {
       {isClustered && (
         <Row>
           <Col size={12}>
-            <Select
+            <OutputField
               id="target"
-              name="target"
-              options={[
-                {
-                  label: formik.values.location,
-                  value: formik.values.location,
-                },
-              ]}
               label="Cluster member"
               value={formik.values.location}
-              disabled={true}
               help="Use the migrate button in the header to move the instance to another cluster member"
             />
             <PlacementGroupSelect
