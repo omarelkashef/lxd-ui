@@ -40,3 +40,8 @@ export const deleteImage = async (page: Page, imageIdentifier: string) => {
 
   await page.waitForSelector(`text=Image ${imageName} deleted.`);
 };
+
+export const visitImageRegistries = async (page: Page) => {
+  await gotoURL(page, `/ui/image-registries`);
+  await expect(page.getByTitle("Create image registry")).toBeVisible();
+};
