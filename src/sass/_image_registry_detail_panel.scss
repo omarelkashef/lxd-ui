@@ -1,0 +1,11 @@
+.image-registry-detail-panel {
+  padding-top: 0 !important;
+
+  .p-panel__content {
+    margin-left: 0;
+  }
+
+  tr:last-child {
+    border: 0;
+  }
+}

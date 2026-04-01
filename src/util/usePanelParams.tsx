@@ -129,7 +129,6 @@ const usePanelParams = (): PanelHelper => {
     target: params.get("target") ?? "",
     deviceName: params.get("device-name"),
     localPeering: params.get("local-peering"),
-
     clear: () => {
       clearParams();
     },

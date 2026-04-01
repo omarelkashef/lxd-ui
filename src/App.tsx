@@ -95,6 +95,10 @@ const StoragePoolDetail = lazy(
 const CreateStorageVolume = lazy(
   async () => import("pages/storage/forms/CreateStorageVolume"),
 );
+const ImageRegistriesList = lazy(
+  async () => import("pages/images/ImageRegistriesList"),
+);
+
 const StorageVolumeDetail = lazy(
   async () => import("pages/storage/StorageVolumeDetail"),
 );
@@ -506,8 +510,12 @@ const App: FC = () => {
           element={<ProtectedRoute outlet={<StorageBucketDetail />} />}
         />
         <Route
-          path={`${ROOT_PATH}/ui/project/:project/local-images`}
+          path={`${ROOT_PATH}/ui/project/:project/images-local`}
           element={<ProtectedRoute outlet={<LocalImageList />} />}
+        />
+        <Route
+          path={`${ROOT_PATH}/ui/project/:project/image-registries`}
+          element={<ProtectedRoute outlet={<ImageRegistriesList />} />}
         />
         <Route
           path={`${ROOT_PATH}/ui/server`}

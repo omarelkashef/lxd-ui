@@ -53,5 +53,6 @@ export const useSupportedFeatures = () => {
     hasStorageAndNetworkOperations: apiExtensions.has(
       "storage_and_network_operations",
     ),
+    hasImageRegistry: apiExtensions.has("image_registries"),
   };
 };
