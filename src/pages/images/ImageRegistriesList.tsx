@@ -1,4 +1,5 @@
 import { useState, useEffect, type FC } from "react";
+import { useImageRegistriesEntitlements } from "util/entitlements/images";
 import {
   EmptyState,
   Icon,
