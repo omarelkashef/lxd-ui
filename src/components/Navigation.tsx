@@ -44,6 +44,8 @@ const initialiseOpenNavMenus = (location: Location) => {
   const openCluster =
     location.pathname.includes("/cluster/") ||
     location.pathname.includes("/placement-groups");
+  const openImages = location.pathname.includes("/image");
+
   const initialOpenMenus: AccordionNavMenu[] = [];
   if (openPermissions) {
     initialOpenMenus.push("permissions");
@@ -59,6 +61,10 @@ const initialiseOpenNavMenus = (location: Location) => {
 
   if (openCluster) {
     initialOpenMenus.push("clustering");
+  }
+
+  if (openImages) {
+    initialOpenMenus.push("images");
   }
 
   return initialOpenMenus;
@@ -473,12 +479,20 @@ const Navigation: FC = () => {
                           }
                         >
                           <NavLink
-                            to={`${ROOT_PATH}/ui/project/${encodeURIComponent(projectName)}/local-images`}
+                            to={`${ROOT_PATH}/ui/project/${encodeURIComponent(projectName)}/images-local`}
                             title={getNavTitle("local images")}
                             disabled={isAllProjects}
                             onClick={softToggleMenu}
                           >
                             Local images
+                          </NavLink>
+                          <NavLink
+                            to={`${ROOT_PATH}/ui/project/${encodeURIComponent(projectName)}/image-registries`}
+                            title={getNavTitle("image registries")}
+                            disabled={isAllProjects}
+                            onClick={softToggleMenu}
+                          >
+                            Registries
                           </NavLink>
                         </NavAccordion>
                       </SideNavigationItem>

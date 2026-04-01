@@ -3,7 +3,7 @@ import type { Page } from "@playwright/test";
 import { gotoURL } from "./navigate";
 
 export const visitLocalImages = async (page: Page, project: string) => {
-  await gotoURL(page, `/ui/project/${project}/local-images`);
+  await gotoURL(page, `/ui/project/${project}/images-local`);
   await expect(page.getByText("Upload image")).toBeVisible();
 };
 
@@ -39,4 +39,14 @@ export const deleteImage = async (page: Page, imageIdentifier: string) => {
     .click();
 
   await page.waitForSelector(`text=Image ${imageName} deleted.`);
+};
+
+export const visitImageRegistries = async (page: Page, project: string) => {
+  await gotoURL(page, `/ui/project/${project}/image-registries`);
+  await expect(page.getByText("Create image registry")).toBeDisabled();
+};
+
+export const selectAllRegistries = async (page: Page) => {
+  await page.getByLabel("multiselect rows").first().click();
+  await page.getByRole("menuitem", { name: "Select all" }).click();
 };

@@ -100,6 +100,8 @@ $border-thin: 1px solid $colors--theme--border-low-contrast !default;
 @import "font";
 @import "forms";
 @import "images";
+@import "image_registries";
+@import "image_registry_detail_panel";
 @import "instance_detail_console";
 @import "instance_detail_overview";
 @import "instance_detail_page";

@@ -21,6 +21,7 @@ import {
 import { setFavicon } from "util/favicon";
 import { ALL_PROJECTS } from "util/loginProject";
 import { AUTH_METHOD } from "util/authentication";
+import { ImageRegistriesList } from "pages/images/ImageRegistriesList";
 
 const AuthenticationSetup = lazy(
   async () => import("pages/login/AuthenticationSetup"),
@@ -506,8 +507,12 @@ const App: FC = () => {
           element={<ProtectedRoute outlet={<StorageBucketDetail />} />}
         />
         <Route
-          path={`${ROOT_PATH}/ui/project/:project/local-images`}
+          path={`${ROOT_PATH}/ui/project/:project/images-local`}
           element={<ProtectedRoute outlet={<LocalImageList />} />}
+        />
+        <Route
+          path={`${ROOT_PATH}/ui/project/:project/image-registries`}
+          element={<ProtectedRoute outlet={<ImageRegistriesList />} />}
         />
         <Route
           path={`${ROOT_PATH}/ui/server`}
