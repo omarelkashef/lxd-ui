@@ -20,6 +20,7 @@ export interface LxdOperation {
     instances_snapshots?: string[];
     storage_volume_snapshots?: string[];
   };
+  entity_url: string;
   status: LxdOperationStatus;
   status_code: number;
   updated_at: string;
