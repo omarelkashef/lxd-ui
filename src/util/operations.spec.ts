@@ -6,12 +6,12 @@ import {
 } from "./operations";
 import type { LxdOperation } from "types/operation";
 
-const craftOperation = (...url: string[]) => {
+const craftOperation = (entityUrl?: string, resourceUrls: string[] = []) => {
   const images: string[] = [];
   const instances: string[] = [];
   const instances_snapshots: string[] = [];
   const storage_volume_snapshots: string[] = [];
-  for (const u of url) {
+  for (const u of resourceUrls) {
     const segments = u.split("/");
     if (u.includes("snapshots") && u.includes("storage-pools")) {
       storage_volume_snapshots.push(u);
@@ -34,19 +34,26 @@ const craftOperation = (...url: string[]) => {
       instances.push(u);
     }
   }
-
   return {
+    entity_url: entityUrl ? entityUrl : undefined,
     resources: {
       images,
       instances,
       instances_snapshots,
       storage_volume_snapshots,
     },
-  } as LxdOperation;
+  } as unknown as LxdOperation;
 };
 
 describe("getInstanceName", () => {
-  it("identifies instance name from an instance operation", () => {
+  it("identifies instance name from an instance operation using resources field", () => {
+    const operation = craftOperation("", ["/1.0/instances/testInstance1"]);
+    const name = getInstanceName(operation);
+
+    expect(name).toBe("testInstance1");
+  });
+
+  it("identifies instance name from an instance operation using entity_url field", () => {
     const operation = craftOperation("/1.0/instances/testInstance1");
     const name = getInstanceName(operation);
 
@@ -63,10 +70,10 @@ describe("getInstanceName", () => {
   });
 
   it("identifies instance name from an instance creation operation with snapshot as source", () => {
-    const operation = craftOperation(
+    const operation = craftOperation("/1.0/instances/targetInstanceName", [
       "/1.0/instances/targetInstanceName",
       "/1.0/instances/sourceInstanceName/testSnap",
-    );
+    ]);
     const name = getInstanceName(operation);
     expect(name).toBe("targetInstanceName");
   });
@@ -109,7 +116,16 @@ describe("getProjectName", () => {
 });
 
 describe("getInstanceSnapshotName", () => {
-  it("identifies snapshot name from an instance snapshot operation", () => {
+  it("identifies snapshot name from an instance snapshot operation using resources field", () => {
+    const operation = craftOperation("", [
+      "/1.0/instances/test-instance/snapshots/test-snapshot",
+    ]);
+    const name = getInstanceSnapshotName(operation);
+
+    expect(name).toBe("test-snapshot");
+  });
+
+  it("identifies snapshot name from an instance snapshot operation using entity_url field", () => {
     const operation = craftOperation(
       "/1.0/instances/test-instance/snapshots/test-snapshot",
     );
@@ -129,7 +145,16 @@ describe("getInstanceSnapshotName", () => {
 });
 
 describe("getVolumeSnapshotName", () => {
-  it("identifies snapshot name from a volume snapshot operation", () => {
+  it("identifies snapshot name from a volume snapshot operation using resources field", () => {
+    const operation = craftOperation("", [
+      "/1.0/storage-pools/test-pool/volumes/custom/test-volume/snapshots/test-snapshot",
+    ]);
+    const name = getVolumeSnapshotName(operation);
+
+    expect(name).toBe("test-snapshot");
+  });
+
+  it("identifies snapshot name from a volume snapshot operation using entity_url field", () => {
     const operation = craftOperation(
       "/1.0/storage-pools/test-pool/volumes/custom/test-volume/snapshots/test-snapshot",
     );
