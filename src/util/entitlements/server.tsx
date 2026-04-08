@@ -72,7 +72,7 @@ export const useServerEntitlements = () => {
       isFineGrained,
       "can_create_image_registries",
       serverEntitlements,
-    ) && hasEntitlement(isFineGrained, "admin", serverEntitlements);
+    ) || hasEntitlement(isFineGrained, "admin", serverEntitlements);
 
   const canViewImageRegistries = () =>
     hasEntitlement(

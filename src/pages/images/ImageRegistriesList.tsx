@@ -1,5 +1,4 @@
 import { useState, useEffect, type FC } from "react";
-import { useImageRegistriesEntitlements } from "util/entitlements/images";
 import {
   EmptyState,
   Icon,
@@ -23,14 +22,17 @@ import ImageRegistriesSearchFilter, {
   type ImageRegistryFilter,
 } from "./ImageRegistriesSearchFilter";
 import { useSearchParams } from "react-router-dom";
-import type { LxdImageRegistryProtocol } from "types/image";
-import { isRegistryPublic } from "util/image-registries";
+import { isImageRegistryPublic } from "util/image-registries";
 import { CreateImageRegistryButton } from "./actions/CreateImageRegistryButton";
+import type { LxdImageRegistryProtocol } from "types/image";
+import usePanelParams, { panels } from "util/usePanelParams";
+import { CreateImageRegistryPanel } from "./panels/CreateImageRegistryPanel";
 
 const ImageRegistriesList: FC = () => {
   const notify = useNotify();
   const [selectedNames, setSelectedNames] = useState<string[]>([]);
   const [searchParams] = useSearchParams();
+  const panelParams = usePanelParams();
 
   const { canCreateImageRegistries } = useServerEntitlements();
 
@@ -90,7 +92,7 @@ const ImageRegistriesList: FC = () => {
       (!filters.protocol.length || filters.protocol.includes(item.protocol)) &&
       (!filters.builtin.length || filters.builtin.includes(item.builtin)) &&
       (!filters.public.length ||
-        filters.public.includes(isRegistryPublic(item))),
+        filters.public.includes(isImageRegistryPublic(item))),
   );
 
   const selectedImageRegistries = imageRegistries.filter((registry) =>
@@ -136,7 +138,7 @@ const ImageRegistriesList: FC = () => {
           className: "clickable-cell",
         },
         {
-          content: isRegistryPublic(registry) ? "Yes" : "No",
+          content: isImageRegistryPublic(registry) ? "Yes" : "No",
           role: "cell",
           "aria-label": "Public",
           className: "clickable-cell",
@@ -262,6 +264,10 @@ const ImageRegistriesList: FC = () => {
           )}
         </Row>
       </CustomLayout>
+
+      {panelParams.panel === panels.createImageRegistry && (
+        <CreateImageRegistryPanel />
+      )}
     </>
   );
 };

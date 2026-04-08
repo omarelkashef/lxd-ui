@@ -21,7 +21,6 @@ import {
 import { setFavicon } from "util/favicon";
 import { ALL_PROJECTS } from "util/loginProject";
 import { AUTH_METHOD } from "util/authentication";
-import { ImageRegistriesList } from "pages/images/ImageRegistriesList";
 
 const AuthenticationSetup = lazy(
   async () => import("pages/login/AuthenticationSetup"),

@@ -1,0 +1,9 @@
+$medium-tooltip-breakpoint: 900px;
+
+.image-registry-rich-tooltip-table {
+  min-height: 250px !important;
+
+  @media (height <= $medium-tooltip-breakpoint) {
+    min-height: 200px !important;
+  }
+}

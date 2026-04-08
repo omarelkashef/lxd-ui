@@ -197,3 +197,13 @@ export const fetchImageRegistry = async (
       return data.metadata;
     });
 };
+
+export const createImageRegistry = async (body: string): Promise<void> => {
+  await fetch(`${ROOT_PATH}/1.0/image-registries`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: body,
+  }).then(handleResponse);
+};

@@ -40,13 +40,3 @@ export const deleteImage = async (page: Page, imageIdentifier: string) => {
 
   await page.waitForSelector(`text=Image ${imageName} deleted.`);
 };
-
-export const visitImageRegistries = async (page: Page, project: string) => {
-  await gotoURL(page, `/ui/project/${project}/image-registries`);
-  await expect(page.getByTitle("Create image registry")).toBeVisible();
-};
-
-export const selectAllRegistries = async (page: Page) => {
-  await page.getByLabel("multiselect rows").first().click();
-  await page.getByRole("menuitem", { name: "Select all" }).click();
-};
