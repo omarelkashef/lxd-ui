@@ -6,7 +6,9 @@ import {
   randomSettingKey,
   randomSettingValue,
   resetSetting,
+  ServerPageTabs,
   updateSetting,
+  visitServer,
   visitServerSettings,
   type ServerSettingType,
 } from "./helpers/server";
@@ -86,4 +88,13 @@ test("add and delete user defined setting", async ({ page }) => {
 
   await expect(keyElement).toHaveCount(0);
   await expect(valueElement).toHaveCount(0);
+});
+
+test("server page tabs are visible", async ({ page }) => {
+  await visitServer(page);
+  const navigation = page.getByRole("navigation");
+
+  for (const tab of ServerPageTabs) {
+    await navigation.getByRole("link", { name: tab }).click();
+  }
 });

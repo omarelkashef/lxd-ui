@@ -4,6 +4,12 @@ import { randomNameSuffix } from "./name";
 import { dismissNotification } from "./notification";
 
 export type ServerSettingType = "checkbox" | "text" | "number" | "password";
+export const ServerPageTabs = [
+  "Hardware",
+  "Clustering",
+  "Cluster links",
+  "Replicators",
+];
 
 export const randomSettingKey = (): string => {
   return `playwright-setting-key-${randomNameSuffix()}`;
@@ -16,6 +22,11 @@ export const randomSettingValue = (): string => {
 export const visitServerSettings = async (page: Page) => {
   await gotoURL(page, "/ui/");
   await page.getByRole("link", { name: "Settings", exact: true }).click();
+};
+
+export const visitServer = async (page: Page) => {
+  await gotoURL(page, "/ui/");
+  await page.getByRole("link", { name: "Server", exact: true }).click();
 };
 
 export const updateCheckbox = async (settingRow: Locator) => {

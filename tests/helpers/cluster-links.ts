@@ -15,24 +15,44 @@ export const randomLinkName = (): string => {
   return `playwright-cluster-link-${randomNameSuffix()}`;
 };
 
-export const createClusterLink = async (page: Page, link: string) => {
+export const visitClusterLinks = async (page: Page) => {
   await gotoURL(page, "/ui/");
   await page.getByRole("button", { name: "Clustering" }).click();
-  await page.getByRole("link", { name: "Link" }).click();
+  await page.getByRole("link", { name: "Links" }).click();
+  await expect(
+    page.getByRole("button").filter({ hasText: "Create link" }),
+  ).toBeVisible();
+};
+
+export const createClusterLink = async (
+  page: Page,
+  link: string,
+  token?: string,
+) => {
+  await visitClusterLinks(page);
   await page.getByRole("button", { name: "Create link" }).click();
   await expect(page.getByText("Create cluster link")).toBeVisible();
-
   await page.getByPlaceholder("Enter name").fill(link);
   const panel = page.getByLabel("Side panel");
+  if (token) {
+    await page.getByText("I have a token").check();
+    await page.getByPlaceholder("Enter token").fill(token);
+  }
+  panel.getByRole("rowheader").filter({ hasText: "admins" }).click();
   await panel.getByRole("button", { name: "Create link" }).click();
 
   await expect(page.getByText(`Cluster link ${link} created`)).toBeVisible();
-  await page.getByText("I have copied the token").click();
-  await page.getByRole("button", { name: "Done" }).click();
+
+  if (!token) {
+    await page.getByText("I have copied the token").click();
+    await page.getByRole("button", { name: "Done" }).click();
+  } else {
+    await dismissNotification(page, `Cluster link ${link} created.`);
+  }
 };
 
 export const editClusterLink = async (page: Page, link: string) => {
-  const row = page.locator("tr").filter({ hasText: link });
+  const row = page.getByRole("row").filter({ hasText: link });
   await row.getByRole("button", { name: "Edit cluster link" }).click();
   await expect(page.getByText(`Edit cluster link ${link}`)).toBeVisible();
 
@@ -45,10 +65,7 @@ export const editClusterLink = async (page: Page, link: string) => {
 };
 
 export const deleteClusterLink = async (page: Page, link: string) => {
-  await gotoURL(page, "/ui/");
-  await page.getByRole("button", { name: "Clustering" }).click();
-  await page.getByRole("link", { name: "Links" }).click();
-  const row = page.locator("tr").filter({ hasText: link });
+  const row = page.getByRole("row").filter({ hasText: link });
   await row.getByRole("button", { name: "Delete cluster link" }).click();
   await page
     .getByRole("dialog", { name: "Confirm delete" })
